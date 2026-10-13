@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biblioteca - Cliente Frontend</title>
+
+  <!-- Librería externa de visualización: Chart.js vía CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0; padding: 2rem 1rem; background: #f4f6fb; color: #1f2937;
+    }
+    main { max-width: 900px; margin: 0 auto; }
+    h1 { margin-top: 0; }
+    section {
+      background: #fff; border-radius: 12px; padding: 1.25rem 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 1.5rem;
+    }
+    h2 { margin-top: 0; font-size: 1.15rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid #e5e7eb; }
+    th { background: #eef2ff; }
+    .estado { padding: .75rem 1rem; border-radius: 8px; background: #eef2ff; }
+    .estado.error { background: #fee2e2; color: #991b1b; }
+    .controles { margin-bottom: 1rem; }
+    select { padding: .35rem .5rem; border-radius: 6px; border: 1px solid #cbd5e1; }
+    .grafica { position: relative; max-width: 640px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>📚 Biblioteca - Visualización de datos</h1>
+
+    <section>
+      <h2>Registros de la API</h2>
+      <div id="estado" class="estado">Cargando datos…</div>
+      <div id="tabla-datos"></div>
+    </section>
+
+    <section>
+      <h2 id="titulo-grafica">Gráfica</h2>
+      <div class="controles">
+        <label for="tipoGrafica">Tipo de gráfica:</label>
+        <select id="tipoGrafica">
+          <option value="bar">Barras</option>
+          <option value="pie">Circular</option>
+        </select>
+      </div>
+      <div class="grafica">
+        <canvas id="miGrafica"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

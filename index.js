@@ -1,16 +1,11 @@
 const express = require('express');
+const cors = require('cors');
+const db = require('./config/db');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json());
-
-// Arreglo en memoria (catálogo de libros)
-let libros = [
-  { id: 1, nombre: 'Cien años de soledad', autor: 'Gabriel García Márquez' },
-  { id: 2, nombre: 'El principito', autor: 'Antoine de Saint-Exupéry' },
-  { id: 3, nombre: 'Don Quijote de la Mancha', autor: 'Miguel de Cervantes' }
-];
-let siguienteId = 4;
 
 // Ruta base
 app.get('/', (req, res) => {
@@ -18,44 +13,82 @@ app.get('/', (req, res) => {
 });
 
 // GET todos
-app.get('/api/recursos', (req, res) => {
-  res.json(libros);
+app.get('/api/recursos', async (req, res) => {
+  try {
+    const [libros] = await db.query('SELECT * FROM libros');
+    res.json(libros);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
 });
 
 // GET por id
-app.get('/api/recursos/:id', (req, res) => {
-  const libro = libros.find(l => l.id === parseInt(req.params.id));
-  if (!libro) return res.status(404).json({ mensaje: 'Recurso no encontrado' });
-  res.json(libro);
+app.get('/api/recursos/:id', async (req, res) => {
+  try {
+    const [filas] = await db.query('SELECT * FROM libros WHERE id = ?', [req.params.id]);
+    if (filas.length === 0) {
+      return res.status(404).json({ mensaje: 'Recurso no encontrado' });
+    }
+    res.json(filas[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
 });
 
 // POST crear
-app.post('/api/recursos', (req, res) => {
-  const { nombre, autor } = req.body;
-  if (!nombre || !autor) {
-    return res.status(400).json({ mensaje: 'nombre y autor son obligatorios' });
+app.post('/api/recursos', async (req, res) => {
+  try {
+    const { nombre, autor } = req.body;
+    if (!nombre || !autor) {
+      return res.status(400).json({ mensaje: 'nombre y autor son obligatorios' });
+    }
+    const [resultado] = await db.query(
+      'INSERT INTO libros (nombre, autor) VALUES (?, ?)',
+      [nombre, autor]
+    );
+    res.status(201).json({ id: resultado.insertId, nombre, autor });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
-  const nuevo = { id: siguienteId++, nombre, autor };
-  libros.push(nuevo);
-  res.status(201).json(nuevo);
 });
 
 // PUT actualizar
-app.put('/api/recursos/:id', (req, res) => {
-  const libro = libros.find(l => l.id === parseInt(req.params.id));
-  if (!libro) return res.status(404).json({ mensaje: 'Recurso no encontrado' });
-  const { nombre, autor } = req.body;
-  if (nombre !== undefined) libro.nombre = nombre;
-  if (autor !== undefined) libro.autor = autor;
-  res.json(libro);
+app.put('/api/recursos/:id', async (req, res) => {
+  try {
+    const [filas] = await db.query('SELECT * FROM libros WHERE id = ?', [req.params.id]);
+    if (filas.length === 0) {
+      return res.status(404).json({ mensaje: 'Recurso no encontrado' });
+    }
+    const libro = filas[0];
+    const nombre = req.body.nombre !== undefined ? req.body.nombre : libro.nombre;
+    const autor = req.body.autor !== undefined ? req.body.autor : libro.autor;
+
+    await db.query(
+      'UPDATE libros SET nombre = ?, autor = ? WHERE id = ?',
+      [nombre, autor, req.params.id]
+    );
+    res.json({ id: libro.id, nombre, autor });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
 });
 
 // DELETE eliminar
-app.delete('/api/recursos/:id', (req, res) => {
-  const indice = libros.findIndex(l => l.id === parseInt(req.params.id));
-  if (indice === -1) return res.status(404).json({ mensaje: 'Recurso no encontrado' });
-  libros.splice(indice, 1);
-  res.json({ mensaje: 'Recurso eliminado correctamente' });
+app.delete('/api/recursos/:id', async (req, res) => {
+  try {
+    const [resultado] = await db.query('DELETE FROM libros WHERE id = ?', [req.params.id]);
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({ mensaje: 'Recurso no encontrado' });
+    }
+    res.json({ mensaje: 'Recurso eliminado correctamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
 });
 
 app.listen(PORT, () => {
