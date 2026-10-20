@@ -29,6 +29,12 @@
     .controles { margin-bottom: 1rem; }
     select { padding: .35rem .5rem; border-radius: 6px; border: 1px solid #cbd5e1; }
     .grafica { position: relative; max-width: 640px; margin: 0 auto; }
+    .acciones { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+    .boton {
+      padding: .5rem 1rem; border: none; border-radius: 6px; cursor: pointer;
+      background: #6366f1; color: #fff; font-size: .95rem;
+    }
+    .boton:hover { background: #4f46e5; }
   </style>
 </head>
 <body>
@@ -37,6 +43,14 @@
 
     <section>
       <h2>Registros de la API</h2>
+      <div class="acciones">
+        <button id="btnExportarJson" class="boton">Exportar JSON</button>
+        <button id="btnExportarCsv" class="boton">Exportar CSV</button>
+        <button id="btnImportarJson" class="boton">Importar JSON</button>
+        <button id="btnImportarCsv" class="boton">Importar CSV</button>
+        <input type="file" id="inputJson" accept=".json" hidden>
+        <input type="file" id="inputCsv" accept=".csv" hidden>
+      </div>
       <div id="estado" class="estado">Cargando datos…</div>
       <div id="tabla-datos"></div>
     </section>

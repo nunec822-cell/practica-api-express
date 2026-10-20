@@ -19,6 +19,8 @@ async function cargarDatos() {
     const libros = await respuesta.json();
 
     if (libros.length === 0) {
+      estado.classList.remove('error');
+      estado.style.display = 'block';
       estado.textContent = 'La API no devolvió registros.';
       return;
     }
@@ -29,6 +31,7 @@ async function cargarDatos() {
     dibujarGrafica(selectorTipo.value);
   } catch (error) {
     console.error(error);
+    estado.style.display = 'block';
     estado.classList.add('error');
     estado.textContent =
       'No se pudieron cargar los datos. Verifica que el servidor Node.js ' +
@@ -128,5 +131,55 @@ function dibujarGrafica(tipo) {
 }
 
 selectorTipo.addEventListener('change', () => dibujarGrafica(selectorTipo.value));
+
+// ---------- Exportación: descarga desde la API ----------
+function exportar(formato) {
+  // El servidor responde con Content-Disposition: attachment,
+  // por lo que el navegador inicia la descarga sin salir de la página
+  window.location.href = `${API_URL}/exportar/${formato}`;
+}
+
+document.getElementById('btnExportarJson').addEventListener('click', () => exportar('json'));
+document.getElementById('btnExportarCsv').addEventListener('click', () => exportar('csv'));
+
+// ---------- Importación: subida de archivo a la API ----------
+async function importar(archivo) {
+  if (!archivo) return;
+
+  const formData = new FormData();
+  formData.append('archivo', archivo); // mismo nombre de campo que usa multer
+
+  try {
+    const respuesta = await fetch(`${API_URL}/importar`, {
+      method: 'POST',
+      body: formData // no definas Content-Type: el navegador lo agrega solo
+    });
+    const resultado = await respuesta.json();
+
+    if (!respuesta.ok) {
+      throw new Error(resultado.mensaje || `Estado ${respuesta.status}`);
+    }
+
+    alert(`${resultado.mensaje}. Registros insertados: ${resultado.total}`);
+    cargarDatos(); // refresca tabla y gráfica
+  } catch (error) {
+    console.error(error);
+    alert(`Error al importar: ${error.message}`);
+  }
+}
+
+function conectarImportacion(idBoton, idInput) {
+  const boton = document.getElementById(idBoton);
+  const input = document.getElementById(idInput);
+
+  boton.addEventListener('click', () => input.click());
+  input.addEventListener('change', async () => {
+    await importar(input.files[0]);
+    input.value = ''; // permite volver a elegir el mismo archivo
+  });
+}
+
+conectarImportacion('btnImportarJson', 'inputJson');
+conectarImportacion('btnImportarCsv', 'inputCsv');
 
 cargarDatos();
